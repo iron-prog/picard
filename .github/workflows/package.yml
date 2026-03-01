@@ -55,7 +55,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v8
       with:
-        pattern: picard-?dist*
+        pattern: picard-*.whl
         path: dist/
         merge-multiple: true
     - name: Prepare distributions
