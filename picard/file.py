@@ -576,7 +576,8 @@ class File(MetadataItem):
                 self.state = File.State.ERROR
                 self.error_append(_("Cannot save file: it was modified externally after loading."))
                 # Track batch external changes
-                self.tagger._external_change_count += 1
+                if hasattr(self.tagger, "_external_change_files"):
+                    self.tagger._external_change_files.append(self)
                 self.update()
                 return
             self._set_error(error)

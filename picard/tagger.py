@@ -126,7 +126,7 @@ from picard.disc import (
     scsitoc,
     whipperlog,
 )
-from picard.file import File
+from picard.file import File, FileIdentity
 from picard.formats import DEFAULT_FORMATS
 from picard.formats.registry import FormatRegistry
 from picard.i18n import (
@@ -445,7 +445,7 @@ class Tagger(QtWidgets.QApplication):
     def _init_tagger_entities(self):
         """Initialize tagger objects/entities"""
         self._pending_files_count = 0
-        self._external_change_count = 0
+        self._external_change_files = []
         self.files = {}
         self.clusters = ClusterList()
         self.albums = {}
@@ -1066,6 +1066,39 @@ class Tagger(QtWidgets.QApplication):
         """Save the specified objects."""
         for file in iter_files_from_objects(objects, save=True):
             file.save()
+        QtCore.QTimer.singleShot(0, self._handle_external_conflicts)
+
+    def _handle_external_conflicts(self):
+        if not self._external_change_files:
+            return
+        from PyQt6.QtWidgets import QMessageBox
+
+        count = len(self._external_change_files)
+
+        msg = QMessageBox(self.window)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setWindowTitle("External file modifications detected")
+
+        msg.setText(f"{count} files were modified externally after loading.")
+
+        overwrite_btn = msg.addButton("Overwrite all", QMessageBox.ButtonRole.AcceptRole)
+        reload_btn = msg.addButton("Reload all", QMessageBox.ButtonRole.ActionRole)
+        msg.addButton("Skip modified files", QMessageBox.ButtonRole.RejectRole)
+
+        msg.exec()
+
+        clicked = msg.clickedButton()
+
+        if clicked == overwrite_btn:
+            for file in self._external_change_files:
+                file._loaded_identity = FileIdentity(file.filename)
+                file.save()
+
+        elif clicked == reload_btn:
+            for file in self._external_change_files:
+                file.load(lambda *_: None)
+
+        self._external_change_files.clear()
 
     def load_mbid(self, type, mbid):
         self.bring_tagger_front()
