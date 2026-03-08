@@ -68,7 +68,7 @@ class FileBrowser(QtWidgets.QTreeView):
         self.set_as_starting_directory_action = QtGui.QAction(_("&Set as starting directory"), self)
         self.set_as_starting_directory_action.triggered.connect(self.set_as_starting_directory)
         self.addAction(self.set_as_starting_directory_action)
-        self.refresh_action = QtWidgets.QAction(_("&Refresh…"), self)
+        self.refresh_action = QtGui.QAction(_("&Refresh…"), self)
         self.refresh_action.triggered.connect(self.refresh)
         self.addAction(self.refresh_action)
         self.doubleClicked.connect(self.load_file_for_item)
@@ -179,19 +179,45 @@ class FileBrowser(QtWidgets.QTreeView):
         self._update_model_filter()
 
     def refresh(self):
-        current_path = self.model.filePath(self.currentIndex())
-        current_expanded = self.isExpanded(self.currentIndex())
-        selected_paths = [(self.model.filePath(index), self.isExpanded(index)) for index in self.selectedIndexes()]
+        model = self.model()
+        if not model:
+            return
+        current_path = model.filePath(self.currentIndex())
+        selected_paths = [(model.filePath(index), self.isExpanded(index)) for index in self.selectedIndexes()]
+        self._refresh_state = {
+            "current_path": current_path,
+            "selected": selected_paths,
+        }
+        # Reset filesystem model
         self._set_model()
-        current_index = self.model.index(current_path)
-        self.setCurrentIndex(current_index)
-        if current_expanded:
-            self.expand(current_index)
-        for path, expanded in selected_paths:
-            index = self.model.index(path)
+        # Wait for filesystem to load before restoring state
+        self.model().directoryLoaded.connect(self._restore_after_refresh)
+
+    def _restore_after_refresh(self, path):
+        state = getattr(self, "_refresh_state", None)
+        if not state:
+            return
+        model = self.model()
+        # Restore current index
+        current_index = model.index(state["current_path"])
+        if current_index.isValid():
+            self.setCurrentIndex(current_index)
+        # Restore expanded and selected items
+        for path, expanded in state["selected"]:
+            index = model.index(path)
+            if not index.isValid():
+                continue
+
             if expanded:
                 self.expand(index)
-            self.selectionModel().select(index, QtCore.QItemSelectionModel.Select)
+
+            self.selectionModel().select(index, QtCore.QItemSelectionModel.SelectionFlag.Select)
+
+        try:
+            model.directoryLoaded.disconnect(self._restore_after_refresh)
+        except TypeError:
+            pass
+        del self._refresh_state
 
     def save_state(self):
         indexes = self.selectedIndexes()
