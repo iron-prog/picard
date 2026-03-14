@@ -240,10 +240,12 @@ class FileBrowser(QtWidgets.QTreeView):
         if path:
             if IS_MACOS:
                 path = extend_root_volume_path(path)
-            index = self.model().index(find_existing_path(path))
-            self.setCurrentIndex(index)
-            self.expand(index)
-            self.scrollTo(index, scrolltype)
+            model = self.model()
+            if model:
+                index = model.index(find_existing_path(path))
+                self.setCurrentIndex(index)
+                self.expand(index)
+                self.scrollTo(index, scrolltype)
 
     def _get_destination_from_path(self, path):
         destination = os.path.normpath(path)
