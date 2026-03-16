@@ -85,6 +85,13 @@
          <string>Overwrite existing files</string>
         </property>
        </widget>
+       <item>
+       <widget class="QCheckBox" name="move_skip_existing_files">
+        <property name="text">
+         <string>Skip moving files if destination already exists</string>
+        </property>
+       </widget>
+      </item>
       </item>
      </layout>
     </widget>
