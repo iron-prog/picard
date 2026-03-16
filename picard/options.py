@@ -534,12 +534,7 @@ BoolOption(
     True,
     title=N_("No MusicBrainz requests on restore"),
 )
-BoolOption(
-    'setting',
-    'move_skip_existing_files',
-    False,
-    title=N_("Skip moving files if destination already exists")
-)
+BoolOption('setting', 'move_skip_existing_files', False, title=N_("Skip moving files if destination already exists"))
 TextOption(
     'setting',
     'session_folder_path',

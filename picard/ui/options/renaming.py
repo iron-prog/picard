@@ -318,7 +318,7 @@ class RenamingOptionsPage(OptionsPage):
             self.ui.renaming_error.setStyleSheet(self.STYLESHEET_ERROR)
             self.ui.renaming_error.setText(e.info)
             return
-    
+
     def _overwrite_toggled(self, checked):
         if checked:
             self.ui.move_skip_existing_files.setChecked(False)
@@ -326,5 +326,6 @@ class RenamingOptionsPage(OptionsPage):
     def _skip_toggled(self, checked):
         if checked:
             self.ui.move_overwrite_existing_files.setChecked(False)
+
 
 register_options_page(RenamingOptionsPage)
