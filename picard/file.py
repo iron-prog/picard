@@ -676,8 +676,13 @@ class File(MetadataItem):
         new_dirname = os.path.dirname(new_filename)
         if not os.path.isdir(new_dirname):
             os.makedirs(new_dirname)
-        if not settings['move_overwrite_existing_files']:
-            new_filename = get_available_filename(new_filename, old_filename)
+        config = get_config()
+        if os.path.exists(new_filename):
+            if config.setting.get("move_skip_existing_files", False):
+                log.warning("Destination exists, skipping move of %r", old_filename)
+                return old_filename
+            if not settings['move_overwrite_existing_files']:
+                new_filename = get_available_filename(new_filename, old_filename)
         log.debug("Moving file %r => %r", old_filename, new_filename)
         move_ensure_casing(old_filename, new_filename)
         return new_filename
