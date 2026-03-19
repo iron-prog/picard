@@ -76,9 +76,9 @@ class RenamingOptionsPage(OptionsPage):
         ('move_files', ['move_files']),
         ('move_files_to', ['move_files_to']),
         ('move_overwrite_existing_files', ['move_overwrite_existing_files']),
-        ('move_skip_existing_files', ['move_skip_existing_files']),
         ('move_additional_files', ['move_additional_files']),
         ('move_additional_files_pattern', ['move_additional_files_pattern']),
+        ('move_conflict_strategy', ['move_conflict_strategy']),
         ('delete_empty_dirs', ['delete_empty_dirs']),
         ('rename_files', ['rename_files']),
         ('selected_file_naming_script_id', ['naming_script_selector']),
@@ -251,11 +251,12 @@ class RenamingOptionsPage(OptionsPage):
         self.ui.move_files_to.setCursorPosition(0)
         self.ui.move_additional_files.setChecked(config.setting['move_additional_files'])
         self.ui.move_additional_files_pattern.setText(config.setting['move_additional_files_pattern'])
+        strategy = config.setting['move_conflict_strategy']
+        self.ui.move_conflict_skip.setChecked(strategy == "skip")
+        self.ui.move_conflict_rename.setChecked(strategy == "rename")
+        self.ui.move_conflict_overwrite.setChecked(strategy == "overwrite")
         self.ui.delete_empty_dirs.setChecked(config.setting['delete_empty_dirs'])
         self.ui.move_overwrite_existing_files.setChecked(config.setting['move_overwrite_existing_files'])
-        self.ui.move_skip_existing_files.setChecked(config.setting['move_skip_existing_files'])
-        self.ui.move_overwrite_existing_files.toggled.connect(self._overwrite_toggled)
-        self.ui.move_skip_existing_files.toggled.connect(self._skip_toggled)
         self.naming_scripts = config.setting['file_renaming_scripts']
         self.selected_naming_script_id = config.setting['selected_file_naming_script_id']
         if self.script_editor_dialog:
@@ -290,9 +291,13 @@ class RenamingOptionsPage(OptionsPage):
         config.setting['move_files_to'] = os.path.normpath(self.ui.move_files_to.text())
         config.setting['move_additional_files'] = self.ui.move_additional_files.isChecked()
         config.setting['move_additional_files_pattern'] = self.ui.move_additional_files_pattern.text()
+        if self.ui.move_conflict_skip.isChecked():
+            config.setting['move_conflict_strategy'] = "skip"
+        elif self.ui.move_conflict_rename.isChecked():
+            config.setting['move_conflict_strategy'] = "rename"
+        elif self.ui.move_conflict_overwrite.isChecked():
+            config.setting['move_conflict_strategy'] = "overwrite"
         config.setting['delete_empty_dirs'] = self.ui.delete_empty_dirs.isChecked()
-        config.setting['move_overwrite_existing_files'] = self.ui.move_overwrite_existing_files.isChecked()
-        config.setting['move_skip_existing_files'] = self.ui.move_skip_existing_files.isChecked()
         config.setting['selected_file_naming_script_id'] = self.selected_naming_script_id
 
     def display_error(self, error):
@@ -318,14 +323,6 @@ class RenamingOptionsPage(OptionsPage):
             self.ui.renaming_error.setStyleSheet(self.STYLESHEET_ERROR)
             self.ui.renaming_error.setText(e.info)
             return
-
-    def _overwrite_toggled(self, checked):
-        if checked:
-            self.ui.move_skip_existing_files.setChecked(False)
-
-    def _skip_toggled(self, checked):
-        if checked:
-            self.ui.move_overwrite_existing_files.setChecked(False)
 
 
 register_options_page(RenamingOptionsPage)

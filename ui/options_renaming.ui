@@ -78,19 +78,26 @@
          <string>Delete empty directories</string>
         </property>
        </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="move_overwrite_existing_files">
-        <property name="text">
-         <string>Overwrite existing files</string>
-        </property>
-       </widget>
        <item>
-       <widget class="QCheckBox" name="move_skip_existing_files">
-        <property name="text">
-         <string>Skip moving files if destination already exists</string>
-        </property>
-       </widget>
+        <widget class="QRadioButton" name="move_conflict_skip">
+         <property name="text">
+          <string>Do not move duplicate files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="move_conflict_rename">
+         <property name="text">
+          <string>Move and rename file with numeric suffix</string>
+          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="move_conflict_overwrite">
+         <property name="text">
+          <string>Move and overwrite existing files</string>
+         </property>
+        </widget>
       </item>
       </item>
      </layout>
@@ -305,7 +312,6 @@
   <tabstop>move_additional_files</tabstop>
   <tabstop>move_additional_files_pattern</tabstop>
   <tabstop>delete_empty_dirs</tabstop>
-  <tabstop>move_overwrite_existing_files</tabstop>
   <tabstop>rename_files</tabstop>
   <tabstop>naming_script_selector</tabstop>
   <tabstop>open_script_editor</tabstop>

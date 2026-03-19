@@ -677,12 +677,15 @@ class File(MetadataItem):
         if not os.path.isdir(new_dirname):
             os.makedirs(new_dirname)
         config = get_config()
+        strategy = config.setting['move_conflict_strategy']
         if os.path.exists(new_filename):
-            if config.setting.get("move_skip_existing_files", False):
+            if strategy == "skip":
                 log.warning("Destination exists, skipping move of %r", old_filename)
                 return old_filename
-            if not settings['move_overwrite_existing_files']:
+            elif strategy == "rename":
                 new_filename = get_available_filename(new_filename, old_filename)
+            elif strategy == "overwrite":
+                pass
         log.debug("Moving file %r => %r", old_filename, new_filename)
         move_ensure_casing(old_filename, new_filename)
         return new_filename
@@ -738,14 +741,21 @@ class File(MetadataItem):
                             break  # we are done with this file
 
     def _apply_additional_files_moves(self, moves, overwrite_existing_files=False):
+        config = get_config()
+        strategy = config.setting.get('move_conflict_strategy', 'rename')
         for old_file_path, new_file_path in moves:
             # FIXME we shouldn't do this from a thread!
             if self.tagger.files.get(decode_filename(old_file_path)):
                 log.debug("File loaded in the tagger, not moving %r", old_file_path)
                 continue
-            if not overwrite_existing_files and os.path.exists(new_file_path):
-                log.warning("File %r already exists, not moving %r", new_file_path, old_file_path)
-                continue
+            if os.path.exists(new_file_path):
+                if strategy == "skip":
+                    log.warning("File %r exists, skipping %r", new_file_path, old_file_path)
+                    continue
+                elif strategy == "rename":
+                    new_file_path = get_available_filename(new_file_path)
+                elif strategy == "overwrite":
+                    pass
             log.debug("Moving %r to %r", old_file_path, new_file_path)
             try:
                 shutil.move(old_file_path, new_file_path)
